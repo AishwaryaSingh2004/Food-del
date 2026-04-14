@@ -1981,7 +1981,7 @@ function DeliveryBoy() {
                 </div>
               ))
             ) : (
-              <p className='text-gray-400 text-center'>No Available Orders</p>
+              <p className='text-gray-400 text-start'>No Available Orders</p>
             )}
 
           </div>
