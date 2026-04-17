@@ -178,7 +178,7 @@ function AddItem() {
 
 export default AddItem;*/
 
-
+/*
 import React, { useState } from "react";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { FaUtensils } from "react-icons/fa";
@@ -267,7 +267,7 @@ function AddItem() {
     return (
         <div className="flex justify-center items-center min-h-screen bg-[#f8f8f8] relative">
 
-            {/* BACK BUTTON */}
+           
             <div
                 className="absolute top-5 left-5"
                 onClick={() => navigate(-1)}
@@ -278,10 +278,10 @@ function AddItem() {
                 />
             </div>
 
-            {/* CARD */}
+           
             <div className="w-[320px] bg-white shadow-lg rounded-xl p-5">
 
-                {/* HEADER */}
+               
                 <div className="flex flex-col items-center mb-4">
                     <div className="bg-orange-100 p-2 rounded-full">
                         <FaUtensils className="text-[#ff4d2d] w-5 h-5" />
@@ -291,7 +291,7 @@ function AddItem() {
                     </h2>
                 </div>
 
-                {/* FORM */}
+              
                 <form onSubmit={handleSubmit} className="space-y-3">
 
                     <input
@@ -351,6 +351,326 @@ function AddItem() {
                         type="submit"
                         disabled={loading}
                         className="w-full bg-[#ff4d2d] text-white py-2 rounded-md text-sm font-semibold hover:bg-orange-600 transition disabled:opacity-50"
+                    >
+                        {loading ? "Saving..." : "Save"}
+                    </button>
+
+                </form>
+            </div>
+        </div>
+    );
+}
+
+export default AddItem;*/
+
+/*
+import React, { useState } from "react";
+import { IoIosArrowRoundBack } from "react-icons/io";
+import { FaUtensils } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { serverUrl } from "../App";
+
+function AddItem() {
+    const navigate = useNavigate();
+
+    const [name, setName] = useState("");
+    const [price, setPrice] = useState("");
+    const [frontendImage, setFrontendImage] = useState(null);
+    const [backendImage, setBackendImage] = useState(null);
+    const [category, setCategory] = useState("");
+    const [foodType, setFoodType] = useState("Veg");
+    const [loading, setLoading] = useState(false);
+
+    const categories = [
+        "Snacks","Main Course","Desserts","Pizza","Burgers",
+        "Sandwiches","South Indian","North Indian","Chinese",
+        "Fast Food","Others"
+    ];
+
+    const handleImage = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setBackendImage(file);
+            setFrontendImage(URL.createObjectURL(file));
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!name || !price || !category) {
+            alert("Please fill all fields");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            // ✅ GET TOKEN
+            const token = localStorage.getItem("token");
+
+            if (!token) {
+                alert("Login first ❌");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("name", name);
+            formData.append("price", Number(price));
+            formData.append("category", category);
+            formData.append("foodType", foodType);
+
+            if (backendImage) {
+                formData.append("image", backendImage);
+            }
+
+            // ✅ SEND TOKEN IN HEADER
+            const res = await axios.post(
+                `${serverUrl}/api/item/add-item`,
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            console.log("✅ Item Added:", res.data);
+
+            alert("Item added successfully ✅");
+            navigate(-1);
+
+        } catch (error) {
+            console.log(
+                "❌ Error:",
+                error.response?.data?.message || error.message
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="flex justify-center items-center min-h-screen bg-[#f8f8f8] relative">
+
+            <div className="absolute top-5 left-5" onClick={() => navigate(-1)}>
+                <IoIosArrowRoundBack size={30} className="text-[#ff4d2d] cursor-pointer" />
+            </div>
+
+            <div className="w-[320px] bg-white shadow-lg rounded-xl p-5">
+
+                <div className="flex flex-col items-center mb-4">
+                    <div className="bg-orange-100 p-2 rounded-full">
+                        <FaUtensils className="text-[#ff4d2d]" />
+                    </div>
+                    <h2 className="mt-2 font-semibold">Add Food</h2>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-3">
+
+                    <input
+                        type="text"
+                        placeholder="Food Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full border px-3 py-2 rounded"
+                    />
+
+                    <input type="file" onChange={handleImage} />
+
+                    {frontendImage && (
+                        <img src={frontendImage} className="h-32 w-full object-cover rounded" />
+                    )}
+
+                    <input
+                        type="number"
+                        placeholder="Price"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="w-full border px-3 py-2 rounded"
+                    />
+
+                    <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full border px-3 py-2 rounded">
+                        <option value="">Select Category</option>
+                        {categories.map((c, i) => (
+                            <option key={i} value={c}>{c}</option>
+                        ))}
+                    </select>
+
+                    <select value={foodType} onChange={(e) => setFoodType(e.target.value)} className="w-full border px-3 py-2 rounded">
+                        <option value="Veg">Veg</option>
+                        <option value="Non-Veg">Non-Veg</option>
+                    </select>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-[#ff4d2d] text-white py-2 rounded"
+                    >
+                        {loading ? "Saving..." : "Save"}
+                    </button>
+
+                </form>
+            </div>
+        </div>
+    );
+}
+
+export default AddItem;*/
+
+
+import React, { useState } from "react";
+import { IoIosArrowRoundBack } from "react-icons/io";
+import { FaUtensils } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { serverUrl } from "../App";
+
+function AddItem() {
+    const navigate = useNavigate();
+
+    const [name, setName] = useState("");
+    const [price, setPrice] = useState("");
+    const [frontendImage, setFrontendImage] = useState(null);
+    const [backendImage, setBackendImage] = useState(null);
+    const [category, setCategory] = useState("");
+    const [foodType, setFoodType] = useState("Veg");
+    const [loading, setLoading] = useState(false);
+
+    const categories = [
+        "Snacks","Main Course","Desserts","Pizza","Burgers",
+        "Sandwiches","South Indian","North Indian","Chinese",
+        "Fast Food","Others"
+    ];
+
+    const handleImage = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setBackendImage(file);
+            setFrontendImage(URL.createObjectURL(file));
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!name || !price || !category) {
+            alert("Please fill all fields");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            const token = localStorage.getItem("token");
+
+            if (!token) {
+                alert("Login first ❌");
+                setLoading(false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("name", name);
+            formData.append("price", Number(price));
+            formData.append("category", category);
+            formData.append("foodType", foodType);
+
+            if (backendImage) {
+                formData.append("image", backendImage);
+            }
+
+            const res = await axios.post(
+                `${serverUrl}/api/item/add-item`,
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "multipart/form-data"
+                    }
+                }
+            );
+
+            console.log("✅ Item Added:", res.data);
+
+            alert("Item added successfully ✅");
+            navigate(-1);
+
+        } catch (error) {
+            console.log(
+                "❌ Error:",
+                error.response?.data?.message || error.message
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="flex justify-center items-center min-h-screen bg-[#f8f8f8] relative">
+
+            <div className="absolute top-5 left-5" onClick={() => navigate(-1)}>
+                <IoIosArrowRoundBack size={30} className="text-[#ff4d2d] cursor-pointer" />
+            </div>
+
+            <div className="w-[320px] bg-white shadow-lg rounded-xl p-5">
+
+                <div className="flex flex-col items-center mb-4">
+                    <div className="bg-orange-100 p-2 rounded-full">
+                        <FaUtensils className="text-[#ff4d2d]" />
+                    </div>
+                    <h2 className="mt-2 font-semibold">Add Food</h2>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-3">
+
+                    <input
+                        type="text"
+                        placeholder="Food Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full border px-3 py-2 rounded"
+                    />
+
+                    <input type="file" onChange={handleImage} />
+
+                    {frontendImage && (
+                        <img src={frontendImage} className="h-32 w-full object-cover rounded" />
+                    )}
+
+                    <input
+                        type="number"
+                        placeholder="Price"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="w-full border px-3 py-2 rounded"
+                    />
+
+                    <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full border px-3 py-2 rounded"
+                    >
+                        <option value="">Select Category</option>
+                        {categories.map((c, i) => (
+                            <option key={i} value={c}>{c}</option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={foodType}
+                        onChange={(e) => setFoodType(e.target.value)}
+                        className="w-full border px-3 py-2 rounded"
+                    >
+                        <option value="Veg">Veg</option>
+                        <option value="Non-Veg">Non-Veg</option>
+                    </select>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-[#ff4d2d] text-white py-2 rounded"
                     >
                         {loading ? "Saving..." : "Save"}
                     </button>

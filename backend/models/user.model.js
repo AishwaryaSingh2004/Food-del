@@ -1,5 +1,6 @@
 
 import mongoose from "mongoose";
+import { type } from "os";
 
 const userSchema = new mongoose.Schema({
     fullName: {
@@ -32,6 +33,9 @@ const userSchema = new mongoose.Schema({
     },
     otpExpires:{
         type:Date
+    },
+    socketId:{
+        type:String
     },
     location:{
         type:{type:String,enum:['Point'],default:'Point'},

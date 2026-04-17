@@ -25,7 +25,9 @@ import {
   deleteItem,
   editItem,
   getItemByCity,
-  getItemById
+  getItemById,
+  getItemsByShop,
+  searchItems
 } from "../controllers/item.controllers.js";
 import { upload } from "../middlewares/multer.js";
 
@@ -41,5 +43,10 @@ itemRouter.delete("/delete/:itemId", isAuth, deleteItem);
 
 // ✅ FIXED: removed isAuth
 itemRouter.get("/get-by-city/:city", getItemByCity);
+
+itemRouter.get("/get-by-shop/:shopId",getItemsByShop );
+
+itemRouter.get("/search-items",searchItems );
+
 
 export default itemRouter;

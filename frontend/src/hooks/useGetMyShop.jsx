@@ -70,6 +70,8 @@ const useGetMyShop = () => {
 
 export default useGetMyShop;*/
 
+
+/*
 import { useEffect } from "react";
 import axios from "axios";
 import { serverUrl } from "../App";
@@ -120,6 +122,69 @@ const useGetMyShop = () => {
 
   }, [userData, dispatch]); // ✅ include dispatch
 
+};
+
+export default useGetMyShop;*/
+
+
+import { useEffect } from "react";
+import axios from "axios";
+import { serverUrl } from "../App";
+import { useDispatch, useSelector } from "react-redux";
+import { setMyShopData } from "../redux/ownerSlice";
+
+const useGetMyShop = () => {
+  const dispatch = useDispatch();
+  const { userData } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    // 🚨 WAIT until user is loaded
+    if (!userData) return;
+
+    const fetchShop = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          console.log("❌ No token found");
+          return;
+        }
+
+        const res = await axios.get(
+          `${serverUrl}/api/shop/get-my`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        console.log("✅ SHOP DATA:", res.data);
+
+        dispatch(setMyShopData(res.data));
+
+      } catch (error) {
+        const err = error.response;
+
+        // ✅ MOST IMPORTANT FIX
+        if (err?.status === 404) {
+          console.log("ℹ️ No shop found → user needs to create one");
+
+          dispatch(setMyShopData(null)); // 👈 VERY IMPORTANT
+
+          return;
+        }
+
+        console.log(
+          "❌ Shop fetch failed:",
+          err?.data || error.message
+        );
+      }
+    };
+
+    fetchShop();
+
+  }, [userData, dispatch]);
 };
 
 export default useGetMyShop;

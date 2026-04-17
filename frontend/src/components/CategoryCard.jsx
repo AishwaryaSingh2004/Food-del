@@ -88,7 +88,7 @@ export default CategoryCard;*/
 
 import React from 'react';
 
-function CategoryCard({ name, image }) {
+function CategoryCard({ name, image, onClick }) {
   if (!name && !image) return null; // ✅ fixed
 
   return (
@@ -104,7 +104,7 @@ function CategoryCard({ name, image }) {
       hover:shadow-lg
       transition-shadow
       relative
-    "
+    " onClick={onClick}
     >
       <img
         src={image}
