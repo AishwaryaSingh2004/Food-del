@@ -619,14 +619,24 @@ const userSlice = createSlice({
       localStorage.setItem("cart", JSON.stringify(state.cartItems));
     },
 
+    //setMyOrders: (state, action) => {
+      //state.myOrders = action.payload || [];
+    //},
+
     setMyOrders: (state, action) => {
-      state.myOrders = action.payload || [];
-    },
+  if (Array.isArray(action.payload)) {
+    state.myOrders = action.payload;
+  } else {
+    console.warn("Invalid orders format:", action.payload);
+    state.myOrders = [];
+  }
+},
 
     addMyOrder: (state, action) => {
       state.myOrders = [action.payload, ...state.myOrders];
     },
 
+    /*
     updateorderStatus: (state, action) => {
       const { orderId, shopId, status } = action.payload;
 
@@ -642,6 +652,52 @@ const userSlice = createSlice({
         }
       }
     },
+
+    updateRealtimeOrderStatus:(state,action)=>{
+      const { orderId, shopId, status } = action.payload;
+
+      const order = state.myOrders.find(o => o._id === orderId);
+
+      if (order) {
+        const shoporder=order.shopOrders.find(so=>so.shop._id==shopId)
+       if (shopOrder) {
+          shopOrder.status = status;
+        }
+      }
+    },*/
+
+updateorderStatus: (state, action) => {
+  const { orderId, shopId, status } = action.payload;
+
+  const order = state.myOrders.find(o => o._id === orderId);
+
+  if (order) {
+    const shopOrder = order.shopOrders.find(
+      s => s.shop === shopId || s.shop?._id === shopId
+    );
+
+    if (shopOrder) {
+      shopOrder.status = status;
+    }
+  }
+},
+
+updateRealtimeOrderStatus: (state, action) => {
+  const { orderId, shopId, status } = action.payload;
+
+  const order = state.myOrders.find(o => o._id === orderId);
+
+  if (order) {
+    const shopOrder = order.shopOrders.find(
+      s => s.shop === shopId || s.shop?._id === shopId
+    );
+
+    if (shopOrder) {
+      shopOrder.status = status;
+    }
+  }
+},
+
 
     setSearchItems: (state, action) => {
       state.searchItems = action.payload || [];
@@ -663,7 +719,8 @@ export const {
   addMyOrder,
   updateorderStatus,
   setSearchItems,
-  setSocket
+  setSocket,
+  updateRealtimeOrderStatus
 } = userSlice.actions;
 
 export default userSlice.reducer;

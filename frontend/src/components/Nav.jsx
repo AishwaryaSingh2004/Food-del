@@ -439,7 +439,7 @@ import { TbReceipt2 } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
 
 function Nav() {
-  const { userData, currentCity, cartItems } = useSelector((state) => state.user);
+  const { userData, currentCity, cartItems} = useSelector((state) => state.user);
   const { myShopData } = useSelector((state) => state.owner);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -582,9 +582,7 @@ function Nav() {
             <div className="hidden md:flex items-center gap-2 cursor-pointer relative px-3 py-1 rounded-lg bg-[#ff4d2d]/10 text-[#ff4d2d] font-medium" onClick={()=>navigate("/my-orders")}>
               <TbReceipt2 size={16} />
               <span>My Orders</span>
-              <span className="absolute -right-2 -top-2 text-xs text-white bg-[#ff4d2d] rounded-full px-[6px] py-[1px]">
-                0
-              </span>
+              
             </div>
           </>
         )}
@@ -597,7 +595,8 @@ function Nav() {
             <TbReceipt2 size={16} />
             <span>My Deliveries</span>
           </div>
-        )}
+            
+)}
 
         {role === "user" && (
           <>

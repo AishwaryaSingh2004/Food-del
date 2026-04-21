@@ -27,7 +27,8 @@ import {
   getItemByCity,
   getItemById,
   getItemsByShop,
-  searchItems
+  rating,
+  searchItems,
 } from "../controllers/item.controllers.js";
 import { upload } from "../middlewares/multer.js";
 
@@ -48,5 +49,6 @@ itemRouter.get("/get-by-shop/:shopId",getItemsByShop );
 
 itemRouter.get("/search-items",searchItems );
 
+itemRouter.post("/rating",rating );
 
 export default itemRouter;

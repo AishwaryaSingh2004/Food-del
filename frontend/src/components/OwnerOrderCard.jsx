@@ -615,9 +615,8 @@ function OwnerOrderCard({ data }) {
 
 export default OwnerOrderCard;*/
 
-
-
-import React from 'react';
+/*
+import React, { useState } from 'react';
 import { MdPhone } from "react-icons/md";
 import axios from "axios";
 import { serverUrl } from "../App";
@@ -626,6 +625,163 @@ import { useDispatch } from "react-redux";
 
 function OwnerOrderCard({ data }) {
     const dispatch = useDispatch();
+
+    // ✅ FIX: restore state
+    const [availableBoys, setAvailableBoys] = useState([]);
+
+    const handleUpdateStatus = async (orderId, shopId, status) => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            const result = await axios.post(
+                `${serverUrl}/api/order/update-status/${orderId}/${shopId}`,
+                { status },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            dispatch(updateorderStatus({
+                orderId,
+                shopId,
+                status
+            }));
+
+            // ✅ FIX: store available boys
+            setAvailableBoys(result.data?.availableBoys || []);
+
+            console.log("UPDATED:", result.data);
+
+        } catch (error) {
+            console.log("STATUS UPDATE ERROR:", error.response?.data || error.message);
+        }
+    };
+
+    const shopOrder = data?.shopOrders?.[0];
+
+    return (
+        <div className='bg-white rounded-lg shadow p-4 space-y-4'>
+
+            <div>
+                <h2 className='text-lg font-semibold text-gray-800'>
+                    {data?.user?.fullName}
+                </h2>
+                <p className='text-sm text-gray-500'>{data?.user?.email}</p>
+
+                <p className='flex items-center gap-2 text-sm text-gray-600 mt-1'>
+                    <MdPhone />
+                    <span>{data?.user?.mobile}</span>
+                </p>
+
+                <p className='gap-2 text-sm text-gray-600'>
+                    Payment: {data?.payment ? "Paid" : "Pending"}
+                </p>
+            </div>
+
+            <div className='text-sm text-gray-600'>
+                <p>{data?.deliveryAddress?.text}</p>
+                <p className='text-xs text-gray-500'>
+                    Lat: {data?.deliveryAddress?.latitude} , Lon {data?.deliveryAddress?.longitude}
+                </p>
+            </div>
+
+            <div className='flex space-x-4 overflow-x-auto pb-2'>
+                {shopOrder?.shopOrderItems?.map((item, i) => (
+                    <div key={i} className='flex-shrink-0 w-40 border rounded-lg p-2'>
+                        <img
+                            src={item?.item?.image}
+                            alt=""
+                            className='w-full h-24 object-cover rounded'
+                        />
+                        <p className='text-sm font-semibold mt-1'>{item?.name}</p>
+                        <p className='text-xs text-gray-500'>
+                            Qty: {item?.quantity} x ₹{item?.price}
+                        </p>
+                    </div>
+                ))}
+            </div>
+
+            <div className='flex justify-between items-center pt-3 border-t'>
+                <span className='text-sm'>
+                    Status:{" "}
+                    <span className='font-semibold capitalize text-[#ff4d2d]'>
+                        {shopOrder?.status}
+                    </span>
+                </span>
+
+                <select
+                    className='border px-3 py-1 text-sm text-[#ff4d2d]'
+                    onChange={(e) =>
+                        handleUpdateStatus(
+                            data?._id,
+                            shopOrder?.shop?._id,
+                            e.target.value
+                        )
+                    }
+                >
+                    <option value="">Change</option>
+                    <option value="pending">Pending</option>
+                    <option value="preparing">Preparing</option>
+                    <option value="out for delivery">Out For Delivery</option>
+                </select>
+            </div>
+
+            {shopOrder?.status === "out for delivery" && (
+                <div className="mt-3 p-3 border rounded bg-orange-50 text-sm">
+
+                    <p className="font-medium mb-2">Delivery Status:</p>
+
+                    {shopOrder?.assignedDeliveryBoy ? (
+                        <div className="text-green-600">
+                            🚚 {shopOrder.assignedDeliveryBoy.fullName} -{" "}
+                            {shopOrder.assignedDeliveryBoy.mobile}
+                        </div>
+                    ) : (
+                        <>
+                           
+                            {availableBoys.length > 0 ? (
+                                availableBoys.map((b, i) => (
+                                    <div key={i}>
+                                        {b.fullName} - {b.mobile}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-gray-600">
+                                    Waiting for delivery boy to accept...
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            )}
+
+            <div className='text-right font-bold text-sm'>
+                Total: ₹{shopOrder?.subTotal}
+            </div>
+
+        </div>
+    );
+}
+
+export default OwnerOrderCard;*/
+
+
+
+import React, { useState } from 'react';
+import { MdPhone } from "react-icons/md";
+import axios from "axios";
+//import { serverUrl } from "../App";
+import { serverUrl } from "../App.jsx";
+import { updateorderStatus } from '../redux/userSlice';
+import { useDispatch } from "react-redux";
+
+function OwnerOrderCard({ data }) {
+    const dispatch = useDispatch();
+
+    const [availableBoys, setAvailableBoys] = useState([]);
 
     const handleUpdateStatus = async (orderId, shopId, status) => {
         try {
@@ -649,10 +805,18 @@ function OwnerOrderCard({ data }) {
                 status
             }));
 
+            // ✅ FIX: ensure safe data handling
+            if (result?.data?.availableBoys) {
+                setAvailableBoys(result.data.availableBoys);
+            } else {
+                setAvailableBoys([]);
+            }
+
             console.log("UPDATED:", result.data);
 
         } catch (error) {
             console.log("STATUS UPDATE ERROR:", error.response?.data || error.message);
+            setAvailableBoys([]); // safety fallback
         }
     };
 
@@ -673,7 +837,9 @@ function OwnerOrderCard({ data }) {
                     <span>{data?.user?.mobile}</span>
                 </p>
 
-                <p className='gap-2 text-sm text-gray-600'>Payment: {data?.payment ? "Paid" : "Pending"}</p>
+                <p className='text-sm text-gray-600'>
+                    Payment: {data?.payment ? "Paid" : "Pending"}
+                </p>
             </div>
 
             {/* ADDRESS */}
@@ -739,9 +905,19 @@ function OwnerOrderCard({ data }) {
                             {shopOrder.assignedDeliveryBoy.mobile}
                         </div>
                     ) : (
-                        <div className="text-gray-600">
-                            Waiting for delivery boy to accept...
-                        </div>
+                        <>
+                            {availableBoys.length > 0 ? (
+                                availableBoys.map((b, i) => (
+                                    <div key={i}>
+                                        {b.fullName} - {b.mobile}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-gray-600">
+                                    Waiting for delivery boy to accept...
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             )}

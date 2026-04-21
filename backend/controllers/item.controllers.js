@@ -758,3 +758,97 @@ export const searchItems = async (req, res) => {
         return res.status(500).json({ message: `search items error: ${error.message}` });
     }
 };
+
+
+
+/*
+export const rating=async (req,res) => {
+  try {
+    const {itemId,rating}=req.body
+
+    if(!itemId || !rating){
+        return res.status(400).json({message:"itemId and rating is required"})
+    }
+
+    if(rating<1 || rating>5){
+        return res.status(400).json({message:"rating must be between 1 to 5"})
+    }
+
+
+    const item=await Item.findById(itemId)
+    if(!item){
+        return res.status(400).json({message:"item not found"})
+    }
+
+    const newCount=item.rating.count + 1
+    const newAverage=(item.rating.average*item.rating.count + rating)/newCount
+
+    item.rating.count=newCount
+    item.rating.average=newAverage
+    await item.save()
+    return res.status(200).json({rating:item.rating})
+
+  } catch (error) {
+    return res.status(500).json({ message: `rating error: ${error.message}` });
+  }
+}*/
+
+export const rating = async (req, res) => {
+  try {
+    const { itemId, rating } = req.body;
+
+    const userRating = Number(rating);
+
+    if (!itemId || isNaN(userRating)) {
+      return res.status(400).json({
+        message: "Valid itemId and rating required"
+      });
+    }
+
+    if (userRating < 1 || userRating > 5) {
+      return res.status(400).json({
+        message: "Rating must be between 1 and 5"
+      });
+    }
+
+    const item = await Item.findById(itemId);
+
+    if (!item) {
+      return res.status(404).json({
+        message: "Item not found"
+      });
+    }
+
+    // ✅ FIX: ensure city exists before save
+    if (!item.city) {
+      item.city = "unknown";
+    }
+
+    // ✅ ensure rating exists
+    if (!item.rating) {
+      item.rating = { count: 0, average: 0 };
+    }
+
+    const count = Number(item.rating.count) || 0;
+    const avg = Number(item.rating.average) || 0;
+
+    const newCount = count + 1;
+    const newAverage = (avg * count + userRating) / newCount;
+
+    item.rating.count = newCount;
+    item.rating.average = newAverage;
+
+    await item.save();
+
+    return res.status(200).json({
+      message: "Rating saved successfully",
+      rating: item.rating
+    });
+
+  } catch (error) {
+    console.error("🔥 FINAL ERROR:", error);
+    return res.status(500).json({
+      message: error.message
+    });
+  }
+};
