@@ -14,4 +14,4 @@ authRouter.post("/google-auth",googleAuth)
 
 
 
-export default authRouter
+export default authRouter;

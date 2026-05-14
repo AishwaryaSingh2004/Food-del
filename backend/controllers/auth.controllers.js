@@ -1073,6 +1073,7 @@ export const resetPassword = async (req, res) => {
 };
 
 /* ================= GOOGLE AUTH ================= */
+/*
 export const googleAuth = async (req, res) => {
   try {
     const { fullName, email, mobile, role } = req.body;
@@ -1108,3 +1109,67 @@ export const googleAuth = async (req, res) => {
   }
 };
 
+*/
+
+export const googleAuth = async (req, res) => {
+  try {
+
+    console.log("GOOGLE BODY:", req.body);
+
+    const { fullName, email } = req.body;
+
+    // ✅ validate
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    let user = await User.findOne({ email });
+
+    // ✅ create user if not exists
+    if (!user) {
+
+      user = await User.create({
+        fullName: fullName || "Google User",
+        email,
+        mobile: "",
+        role: "user",
+        password: "",
+      });
+
+      console.log("✅ New Google user created");
+    }
+
+    // ✅ token
+    const token = genToken(user._id);
+
+    // ✅ cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    console.log("✅ Google login success");
+
+    return res.status(200).json({
+      success: true,
+      token,
+      user,
+    });
+
+  } catch (error) {
+
+    // ✅ IMPORTANT
+    console.log("❌ GOOGLE AUTH ERROR:");
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

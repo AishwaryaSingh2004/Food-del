@@ -2076,7 +2076,7 @@ export default DeliveryBoy;*/
 
 
 
-
+/*
 import React, { useEffect, useState, useRef } from 'react';
 import Nav from "../components/Nav";
 import { useSelector } from 'react-redux';
@@ -2433,6 +2433,597 @@ const getTodayDeliveries = async () => {
         )}
 
       </div>
+    </div>
+  );
+}
+
+export default DeliveryBoy;
+*/
+
+import React, { useEffect, useState, useRef } from 'react';
+import Nav from "../components/Nav";
+import { useSelector } from 'react-redux';
+import axios from "axios";
+import { serverUrl } from "../App";
+import DeliveryBoyTracking from './DeliveryBoyTracking';
+
+import {
+  ResponsiveContainer,
+  CartesianGrid,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip
+} from "recharts";
+
+function DeliveryBoy() {
+
+  const { userData } = useSelector(state => state.user);
+
+  const [currentOrder, setCurrentOrder] = useState(null);
+  const [showOtpBox, setShowOtpBox] = useState(false);
+  const [availableAssignments, setAvailableAssignments] = useState([]);
+  const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [todayDeliveries, setTodayDeliveries] = useState([]);
+
+  const hasFetched = useRef(false);
+
+  const ratePerDelivery = 50;
+
+  const totalEarning = todayDeliveries.reduce(
+    (sum, d) => sum + d.count * ratePerDelivery,
+    0
+  );
+
+  // ================= GET ASSIGNMENTS =================
+  const getAssignments = async () => {
+
+    try {
+
+      const token = localStorage.getItem("token");
+
+      if (!token) return;
+
+      setLoading(true);
+
+      const result = await axios.get(
+        `${serverUrl}/api/order/get-assignments`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      const unique = [
+        ...new Map(
+          result.data.map((a) => [a.assignmentId, a])
+        ).values()
+      ];
+
+      setAvailableAssignments(unique);
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  };
+
+  // ================= GET CURRENT ORDER =================
+  const getCurrentOrder = async () => {
+
+    try {
+
+      const token = localStorage.getItem("token");
+
+      if (!token) return;
+
+      const result = await axios.get(
+        `${serverUrl}/api/order/get-current-order`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      setCurrentOrder(result.data);
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
+  };
+
+  // ================= TODAY DELIVERIES =================
+  const getTodayDeliveries = async () => {
+
+    try {
+
+      const token = localStorage.getItem("token");
+
+      if (!token) return;
+
+      const res = await axios.get(
+        `${serverUrl}/api/order/get-today-deliveries`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      setTodayDeliveries(res.data);
+
+    } catch (error) {
+
+      console.log(
+        "TODAY DELIVERY ERROR:",
+        error.response?.data || error.message
+      );
+
+    }
+  };
+
+  // ================= ACCEPT ORDER =================
+  const acceptOrder = async (assignmentId) => {
+
+    try {
+
+      const token = localStorage.getItem("token");
+
+      if (!token) return;
+
+      await axios.get(
+        `${serverUrl}/api/order/accept-order/${assignmentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      setAvailableAssignments((prev) =>
+        prev.filter((a) => a.assignmentId !== assignmentId)
+      );
+
+      await getCurrentOrder();
+
+      getAssignments();
+
+    } catch (error) {
+
+      console.log(
+        "ACCEPT ERROR:",
+        error.response?.data || error.message
+      );
+
+    }
+  };
+
+  // ================= REJECT ORDER =================
+  const rejectOrder = async (assignmentId) => {
+
+    try {
+
+      const token = localStorage.getItem("token");
+
+      if (!token) return;
+
+      await axios.post(
+        `${serverUrl}/api/order/reject-order/${assignmentId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      setAvailableAssignments((prev) =>
+        prev.filter((a) => a.assignmentId !== assignmentId)
+      );
+
+    } catch (error) {
+
+      console.log(
+        "REJECT ERROR:",
+        error.response?.data || error.message
+      );
+
+    }
+  };
+
+  // ================= SEND OTP =================
+  const sendOtp = async () => {
+
+    try {
+
+      const token = localStorage.getItem("token");
+
+      if (!token) return;
+
+      await axios.post(
+        `${serverUrl}/api/order/send-delivery-otp`,
+        {
+          orderId: currentOrder._id,
+          shopOrderId: currentOrder.shopOrder._id
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      alert("OTP Sent Successfully");
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
+  };
+
+  // ================= VERIFY OTP =================
+  const verifyOtp = async () => {
+
+    try {
+
+      const token = localStorage.getItem("token");
+
+      if (!token) return;
+
+      if (!otp) {
+        alert("Please enter OTP");
+        return;
+      }
+
+      await axios.post(
+        `${serverUrl}/api/order/verify-delivery-otp`,
+        {
+          orderId: currentOrder._id,
+          shopOrderId: currentOrder.shopOrder._id,
+          otp
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      alert("Order Delivered ✅");
+
+      setOtp("");
+      setShowOtpBox(false);
+
+      await getCurrentOrder();
+
+      getAssignments();
+
+      getTodayDeliveries();
+
+      location.reload();
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
+  };
+
+  // ================= INIT =================
+  useEffect(() => {
+
+    if (userData && !hasFetched.current) {
+
+      hasFetched.current = true;
+
+      getAssignments();
+
+      getCurrentOrder();
+
+      getTodayDeliveries();
+
+      const interval = setInterval(() => {
+
+        getAssignments();
+
+      }, 5000);
+
+      return () => clearInterval(interval);
+    }
+
+  }, [userData]);
+
+  return (
+    <div className='w-screen min-h-screen flex flex-col gap-5 items-center bg-[#fff9f6]'>
+
+      <Nav />
+
+      <div className='w-full max-w-[800px] flex flex-col gap-5 items-center mt-10'>
+
+        {/* TOP CARD */}
+
+        <div className='bg-white rounded-2xl shadow-md px-6 py-5 w-[90%] text-center'>
+
+          <h1 className='text-xl font-semibold text-[#ff4d2d]'>
+
+            Welcome, {userData?.fullName || "User"}
+
+          </h1>
+
+          <p className='text-sm text-[#ff4d2d]'>
+
+            Latitude:
+            {userData?.location?.coordinates?.[1] || "--"}
+
+            ,
+
+            Longitude:
+            {userData?.location?.coordinates?.[0] || "--"}
+
+          </p>
+
+        </div>
+
+        {/* TODAY DELIVERIES */}
+
+        <div className='bg-white rounded-2xl shadow-md p-5 w-[90%] border border-orange-100'>
+
+          <h1 className='text-lg font-bold mb-3 text-[#ff4d2d]'>
+
+            Today Deliveries
+
+          </h1>
+
+          <ResponsiveContainer width="100%" height={200}>
+
+            <BarChart
+              data={todayDeliveries}
+              margin={{
+                top: 10,
+                right: 20,
+                left: 0,
+                bottom: 0
+              }}
+            >
+
+              <CartesianGrid
+                stroke="#d1d5db"
+                strokeDasharray="3 3"
+              />
+
+              <XAxis
+                dataKey="hour"
+                tickFormatter={(h) => `${h}:00`}
+              />
+
+              <YAxis allowDecimals={false} />
+
+              <Tooltip
+                formatter={(value) => [value, "orders"]}
+                labelFormatter={(label) => `${label}:00`}
+              />
+
+              <Bar
+                dataKey="count"
+                fill="#ff4d2d"
+                radius={[4, 4, 0, 0]}
+                barSize={40}
+              />
+
+            </BarChart>
+
+          </ResponsiveContainer>
+
+          <div className='max-w-sm mx-auto mt-6 p-6 bg-white rounded-2xl shadow-lg text-center'>
+
+            <h1 className='text-xl font-semibold text-gray-800 mb-2'>
+
+              Today's Earning
+
+            </h1>
+
+            <span className='text-3xl font-bold text-green-600'>
+
+              ₹{totalEarning}
+
+            </span>
+
+          </div>
+
+        </div>
+
+        {/* CURRENT ORDER */}
+
+        {currentOrder && (
+
+          <div className='bg-white rounded-2xl shadow-md px-5 py-4 w-[90%]'>
+
+            <h2 className='text-lg font-bold text-gray-700 mb-3'>
+
+              📦 Current Order
+
+            </h2>
+
+            <div className='border rounded-lg p-3 bg-gray-50'>
+
+              <p className='font-semibold text-sm text-gray-800'>
+
+                {currentOrder?.shopOrder?.shop?.name}
+
+              </p>
+
+              <p className='text-sm text-gray-600'>
+
+                {currentOrder?.deliveryAddress?.text}
+
+              </p>
+
+              <p className='text-xs text-gray-500 mt-1'>
+
+                {currentOrder?.shopOrder?.shopOrderItems?.length || 0}
+                item |
+                ₹{currentOrder?.shopOrder?.subTotal || 0}
+
+              </p>
+
+            </div>
+
+            <DeliveryBoyTracking data={currentOrder} />
+
+            {!showOtpBox ? (
+
+              <button
+                onClick={() => {
+                  sendOtp();
+                  setShowOtpBox(true);
+                }}
+                className='mt-4 w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600'
+              >
+
+                Mark As Delivered
+
+              </button>
+
+            ) : (
+
+              <div className='mt-4 p-4 border rounded-xl bg-gray-50'>
+
+                <p className='text-sm'>
+
+                  Enter OTP sent to
+
+                  <span className='font-semibold ml-1'>
+
+                    {currentOrder?.user?.fullName}
+
+                  </span>
+
+                </p>
+
+                <input
+                  type="text"
+                  placeholder="Enter OTP"
+                  className='mt-2 w-full border px-3 py-2 rounded-lg outline-none'
+                  onChange={(e) => setOtp(e.target.value)}
+                  value={otp}
+                />
+
+                <button
+                  className='mt-3 w-full bg-orange-500 text-white py-2 rounded-lg font-semibold'
+                  onClick={verifyOtp}
+                >
+
+                  Submit OTP
+
+                </button>
+
+              </div>
+
+            )}
+
+          </div>
+
+        )}
+
+        {/* AVAILABLE ORDERS */}
+
+        {!currentOrder && (
+
+          <div className='bg-white rounded-2xl p-5 shadow-md w-[90%]'>
+
+            <h1 className='text-lg font-bold mb-4'>
+
+              Available Orders
+
+            </h1>
+
+            {loading ? (
+
+              <p className='text-center text-gray-400'>
+
+                Loading...
+
+              </p>
+
+            ) : (
+
+              <div className='space-y-4'>
+
+                {availableAssignments.map((a) => (
+
+                  <div
+                    key={a.assignmentId}
+                    className='border p-4 rounded-lg flex justify-between items-center'
+                  >
+
+                    <div>
+
+                      <p className='font-semibold'>
+
+                        {a.shopName}
+
+                      </p>
+
+                      <p className='text-sm text-gray-500'>
+
+                        {a.deliveryAddress?.text}
+
+                      </p>
+
+                    </div>
+
+                    <div className='flex gap-2'>
+
+                      <button
+                        onClick={() =>
+                          acceptOrder(a.assignmentId)
+                        }
+                        className='bg-orange-500 text-white px-4 py-2 rounded-lg'
+                      >
+
+                        Accept
+
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          rejectOrder(a.assignmentId)
+                        }
+                        className='bg-red-500 text-white px-4 py-2 rounded-lg'
+                      >
+
+                        Reject
+
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            )}
+
+          </div>
+
+        )}
+
+      </div>
+
     </div>
   );
 }

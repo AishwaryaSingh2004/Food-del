@@ -1260,6 +1260,7 @@ import Nav from "./components/Nav";
 import useGetCity from "./hooks/useGetCity.jsx";
 import useGetMyShop from "./hooks/useGetMyShop.jsx";
 import CreateEditShop from "./pages/CreateEditShop.jsx";
+
 import AddItem from "./pages/AddItem.jsx";
 import EditItem from "./pages/EditItem.jsx";
 import useGetShopByCity from "./hooks/useGetShopByCity.jsx";
@@ -1268,12 +1269,14 @@ import CartPage from "./pages/CartPage.jsx";
 import CheckOut from "./pages/CheckOut.jsx";
 import OrderPlaced from "./pages/OrderPlaced.jsx";
 import MyOrders from "./pages/MyOrders.jsx";
+
 import useUpdateLocation from "./hooks/useUpdateLocation.jsx";
 import TrackOrderPage from "./pages/TrackOrderPage.jsx";
 import Shop from "./pages/Shop.jsx";
 import { useEffect, useRef } from "react";
 import { setSocket } from "./redux/userSlice.js";
 import { io } from "socket.io-client";
+import DeliveryHistory from "./pages/DeliveryHistory.jsx";
 
 export const serverUrl = "http://localhost:8000";
 
@@ -1369,6 +1372,18 @@ function App() {
 
         <Route path="/track-order/:orderId" element={userData ? <TrackOrderPage /> : <Navigate to="/signin" replace />} />
         <Route path="/shop/:shopId" element={userData ? <Shop /> : <Navigate to="/signin" replace />} />
+
+        <Route
+          path="/delivery"
+          element={
+            userData ? (
+              <DeliveryHistory />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+
 
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>

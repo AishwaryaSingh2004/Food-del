@@ -2822,6 +2822,57 @@ export const acceptOrder = async (req, res) => {
 
 
 
+// ================= REJECT ORDER =================
+export const rejectOrder = async (req, res) => {
+
+    try {
+
+        const { assignmentId } = req.params;
+
+        const assignment = await DeliveryAssignment.findById(
+            assignmentId
+        );
+
+        if (!assignment) {
+
+            return res.status(404).json({
+                message: "Assignment not found"
+            });
+
+        }
+
+        // remove this delivery boy
+        assignment.broadcastedTo =
+            assignment.broadcastedTo.filter(
+                (id) =>
+                    id.toString() !== req.userId.toString()
+            );
+
+        // if all delivery boys rejected
+        if (assignment.broadcastedTo.length === 0) {
+
+            assignment.status = "rejected";
+
+        }
+
+        await assignment.save();
+
+        return res.status(200).json({
+            message: "Order rejected successfully"
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            message: `reject order error: ${error.message}`
+        });
+
+    }
+};
+
+
+
+
 
 
 
@@ -3405,5 +3456,76 @@ export const getTodayDeliveries = async (req, res) => {
     return res.status(500).json({
       message: error.message
     });
+  }
+};
+
+
+// ================= DELIVERY HISTORY =================
+export const getDeliveryHistory = async (req, res) => {
+  try {
+
+    const orders = await orderModel
+      .find({
+        "shopOrders.assignedDeliveryBoy": req.userId,
+        "shopOrders.status": "delivered"
+      })
+      .sort({ createdAt: -1 })
+      .populate("user", "fullName email mobile")
+      .populate("shopOrders.shop", "name")
+      .populate(
+        "shopOrders.shopOrderItems.item",
+        "name image price"
+      )
+      .populate(
+        "shopOrders.assignedDeliveryBoy",
+        "fullName mobile"
+      );
+
+    let deliveryHistory = [];
+
+    orders.forEach((order) => {
+
+      const deliveredShopOrders = order.shopOrders.filter(
+        (shopOrder) =>
+          shopOrder.assignedDeliveryBoy?._id?.toString() ===
+            req.userId.toString() &&
+          shopOrder.status === "delivered"
+      );
+
+      deliveredShopOrders.forEach((shopOrder) => {
+        deliveryHistory.push({
+          orderId: order._id,
+
+          customer: order.user,
+
+          shop: shopOrder.shop,
+
+          deliveryAddress: order.deliveryAddress,
+
+          paymentMethod: order.paymentMethod,
+
+          payment: order.payment,
+
+          totalAmount: shopOrder.subTotal,
+
+          status: shopOrder.status,
+
+          deliveredAt: shopOrder.deliveredAt,
+
+          items: shopOrder.shopOrderItems,
+
+          createdAt: order.createdAt
+        });
+      });
+    });
+
+    return res.status(200).json(deliveryHistory);
+
+  } catch (error) {
+
+    return res.status(500).json({
+      message: `delivery history error: ${error.message}`
+    });
+
   }
 };

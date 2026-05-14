@@ -523,7 +523,7 @@ function Nav() {
       )}
 
       {/* Logo */}
-      <h1 className="text-3xl font-bold text-[#ff4d2d]">Vingo</h1>
+      <h1 className="text-3xl font-bold text-[#ff4d2d]">Spicy Bite</h1>
 
       {/* 💻 DESKTOP SEARCH */}
       {role === "user" && (
@@ -591,6 +591,7 @@ function Nav() {
           <div
             className="flex items-center gap-2 cursor-pointer px-3 py-1 rounded-lg bg-[#ff4d2d]/10 text-[#ff4d2d] font-medium"
             onClick={() => navigate("/delivery")}
+            
           >
             <TbReceipt2 size={16} />
             <span>My Deliveries</span>

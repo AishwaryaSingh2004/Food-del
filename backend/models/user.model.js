@@ -1,6 +1,6 @@
 
 import mongoose from "mongoose";
-import { type } from "os";
+
 
 const userSchema = new mongoose.Schema({
     fullName: {
@@ -14,15 +14,18 @@ const userSchema = new mongoose.Schema({
     },
     password:{
         type: String,
+        default: "",
     },
     mobile:{
         type: String,
-        required: true
+        //required: true,
+        default: "",
     },
     role:{
-        type:String,
-        enum:["user","owner","deliveryBoy"],
-        required:true
+        type: String,
+        enum: ["user","owner","deliveryBoy"],
+        default: "user",
+        //required: true
     },
     resetOtp:{
         type:String
