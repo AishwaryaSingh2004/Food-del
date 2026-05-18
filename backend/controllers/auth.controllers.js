@@ -938,6 +938,7 @@ export const signup = async (req, res) => {
 };
 
 /* ================= SIGNIN ================= */
+
 export const signIn = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -979,6 +980,7 @@ export const signIn = async (req, res) => {
     return res.status(500).json({ message: `sign in error ${error}` });
   }
 };
+
 
 /* ================= SIGNOUT ================= */
 export const signOut = async (req, res) => {
